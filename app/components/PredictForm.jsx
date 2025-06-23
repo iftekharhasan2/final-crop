@@ -56,6 +56,7 @@ export default function PredictForm() {
 
       const data = await res.json();
       setResult(data);
+      
     
     } catch (err) {
       setError(err.message);
