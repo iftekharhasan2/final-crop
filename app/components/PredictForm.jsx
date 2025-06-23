@@ -19,6 +19,7 @@ export default function PredictForm() {
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,23 +33,30 @@ export default function PredictForm() {
     e.preventDefault();
     setError(null);
     setResult(null);
+    setSaved(false);
 
     try {
+      // 1. Call Flask backend
       const res = await fetch("http://localhost:5000/predict", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Prediction failed");
+        const text = await res.text();
+        console.error("Flask backend error response:", text);
+        try {
+          const err = JSON.parse(text);
+          throw new Error(err.error || "Prediction failed");
+        } catch {
+          throw new Error("Prediction failed and response is not JSON");
+        }
       }
 
       const data = await res.json();
       setResult(data);
+    
     } catch (err) {
       setError(err.message);
     }
@@ -85,11 +93,14 @@ export default function PredictForm() {
         <div className="mt-6 p-4 bg-green-100 border border-green-400 rounded">
           <h3 className="font-semibold">Prediction:</h3>
           <p>
-            <strong>Code:</strong> {result.prediction_code}
-          </p>
-          <p>
             <strong>Recommendation:</strong> {result.prediction_text}
           </p>
+        </div>
+      )}
+
+      {saved && (
+        <div className="mt-4 p-3 bg-blue-100 border border-blue-400 rounded">
+          ✅ Prediction saved to database!
         </div>
       )}
 

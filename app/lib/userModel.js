@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   number: { type: String, required: true },
-  coins: { type: Number, default: 1000 } // ✅ Added coins field
+  coins: { type: Number, default: 1000 }, // ✅ Added coins field
 });
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);
+
