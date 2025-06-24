@@ -15,6 +15,9 @@ export default function CropManual() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  // Determine max day limit based on phase
+  const maxDay = form.phase === "জমি প্রস্তুতকালীন সময়কাল" ? 3 : 30;
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -45,109 +48,146 @@ export default function CropManual() {
   }
 
   function handleChange(e) {
+    let value = e.target.value;
+
+    if (e.target.name === "day") {
+      // Clamp day value between 1 and maxDay
+      value = Math.min(Math.max(Number(value), 1), maxDay);
+    }
+
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     }));
   }
 
   return (
-    <div style={{ maxWidth: 700, margin: "2rem auto", fontFamily: "Arial, sans-serif" }}>
-      <h1>Cucumber Crop Manual</h1>
-      <form onSubmit={handleSubmit} style={{ marginBottom: "1rem" }}>
-        <label>
-          Day:
-          <input
-            type="number"
-            name="day"
-            min={1}
-            max={30}
-            value={form.day}
-            onChange={handleChange}
-            required
-            style={{ marginLeft: 8 }}
-          />
-        </label>
-        <br />
-        <label>
-          City:
-          <input
-            type="text"
-            name="city"
-            value={form.city}
-            onChange={handleChange}
-            required
-            style={{ marginLeft: 8 }}
-          />
-        </label>
-        <br />
-        <label>
-          Phase:
-          <select name="phase" value={form.phase} onChange={handleChange} style={{ marginLeft: 8 }}>
-            <option value="জমি প্রস্তুতকালীন সময়কাল">জমি প্রস্তুতকালীন সময়কাল</option>
-            <option value="সংবেদনশীল সময়কাল">সংবেদনশীল সময়কাল</option>
-          </select>
-        </label>
-        <br />
-        <label>
-          Chara (Seedling) Ready:
-          <select name="chara" value={form.chara} onChange={handleChange} style={{ marginLeft: 8 }}>
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
-          </select>
-        </label>
-        <br />
-        <label>
-          Dynamic Choice:
-          <select name="dynamic_choice" value={form.dynamic_choice} onChange={handleChange} style={{ marginLeft: 8 }}>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
-        </label>
-        <br />
-        <button type="submit" disabled={loading} style={{ marginTop: 12, padding: "6px 12px" }}>
+    <div className="max-w-7xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md font-sans">
+      <h1 className="text-3xl font-bold mb-6 text-center text-green-700">
+        Cucumber Crop Manual
+      </h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6 mb-8">
+        <div className="flex flex-wrap gap-4">
+          <label className="flex flex-col flex-1 min-w-[120px]">
+            Day:
+            <input
+              type="number"
+              name="day"
+              min={1}
+              max={maxDay}
+              value={form.day}
+              onChange={handleChange}
+              required
+              className="mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </label>
+
+          <label className="flex flex-col flex-1 min-w-[120px]">
+            City:
+            <input
+              type="text"
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              required
+              className="mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </label>
+
+          <label className="flex flex-col flex-1 min-w-[180px]">
+            Phase:
+            <select
+              name="phase"
+              value={form.phase}
+              onChange={handleChange}
+              className="mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="জমি প্রস্তুতকালীন সময়কাল">জমি প্রস্তুতকালীন সময়কাল</option>
+              <option value="সংবেদনশীল সময়কাল">সংবেদনশীল সময়কাল</option>
+            </select>
+          </label>
+
+          {/* Show Chara (Seedling) Ready only if phase is সংবেদনশীল সময়কাল */}
+          {form.phase === "সংবেদনশীল সময়কাল" && (
+            <label className="flex flex-col flex-1 min-w-[140px]">
+              Chara (Seedling) Ready:
+              <select
+                name="chara"
+                value={form.chara}
+                onChange={handleChange}
+                className="mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+              >
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </label>
+          )}
+
+          <label className="flex flex-col flex-1 min-w-[140px]">
+            Dynamic Choice:
+            <select
+              name="dynamic_choice"
+              value={form.dynamic_choice}
+              onChange={handleChange}
+              className="mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md transition duration-200 disabled:opacity-50"
+        >
           {loading ? "Loading..." : "Get Crop Manual"}
         </button>
       </form>
 
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {error && <p className="text-center text-red-600 font-semibold mb-4">{error}</p>}
 
-      {result && result.message && <p>{result.message}</p>}
+      {result && result.message && (
+        <p className="text-center text-green-700 font-medium mb-4">{result.message}</p>
+      )}
 
       {result && result.data && (
         <>
-          <h2>Crop Manual Steps</h2>
-          <table
-            style={{ borderCollapse: "collapse", width: "100%", marginBottom: 20 }}
-            border="1"
-          >
-            <thead style={{ backgroundColor: "#f2f2f2" }}>
-              <tr>
-                <th>Step</th>
-                <th>Description</th>
-                <th>Time of Day</th>
-                <th>Time Range</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.data.map((step) => (
-                <tr key={step.Step}>
-                  <td>{step.Step}</td>
-                  <td>{step["Task Description"]}</td>
-                  <td>{step["Time of Day"]}</td>
-                  <td>{step["Time Range"]}</td>
+          <h2 className="text-2xl font-semibold mb-4 text-green-800">Crop Manual Steps</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 rounded-md overflow-hidden">
+              <thead className="bg-green-100">
+                <tr>
+                  <th className="px-4 py-2 border-r border-gray-300 text-left font-semibold">Step</th>
+                  <th className="px-4 py-2 border-r border-gray-300 text-left font-semibold">Description</th>
+                  <th className="px-4 py-2 border-r border-gray-300 text-left font-semibold">Time of Day</th>
+                  <th className="px-4 py-2 text-left font-semibold">Time Range</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {result.data.map((step) => (
+                  <tr key={step.Step} className="even:bg-green-50">
+                    <td className="px-4 py-2 border-t border-gray-300">{step.Step}</td>
+                    <td className="px-4 py-2 border-t border-gray-300">{step["Task Description"]}</td>
+                    <td className="px-4 py-2 border-t border-gray-300">{step["Time of Day"]}</td>
+                    <td className="px-4 py-2 border-t border-gray-300">{step["Time Range"]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {result.extra_notes && result.extra_notes.length > 0 && (
             <>
-              <h3>Extra Notes:</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-3 text-green-700">Extra Notes:</h3>
               {result.extra_notes.map((notesTuple, i) => (
-                <div key={i}>
+                <div key={i} className="mb-4 space-y-1">
                   {notesTuple.map((note, idx) => (
-                    <p key={idx}>{note}</p>
+                    <p key={idx} className="text-gray-700">
+                      {note}
+                    </p>
                   ))}
                 </div>
               ))}
@@ -156,15 +196,25 @@ export default function CropManual() {
 
           {result.weather && (
             <>
-              <h3>Weather Information</h3>
-              <p>Temperature: {result.weather.temperature} °C</p>
-              <p>Humidity: {result.weather.humidity} %</p>
-              <p>Description: {result.weather.description}</p>
-              <p>Wind Speed: {result.weather.wind_speed} m/s</p>
+              <h3 className="text-xl font-semibold mt-6 mb-3 text-green-700">Weather Information</h3>
+              <p>
+                Temperature: <span className="font-medium">{result.weather.temperature} °C</span>
+              </p>
+              <p>
+                Humidity: <span className="font-medium">{result.weather.humidity} %</span>
+              </p>
+              <p>
+                Description: <span className="font-medium">{result.weather.description}</span>
+              </p>
+              <p>
+                Wind Speed: <span className="font-medium">{result.weather.wind_speed} m/s</span>
+              </p>
             </>
           )}
 
-          {result.warning && <p style={{ color: "red", fontWeight: "bold" }}>{result.warning}</p>}
+          {result.warning && (
+            <p className="text-red-700 font-bold mt-6 text-center">{result.warning}</p>
+          )}
         </>
       )}
     </div>

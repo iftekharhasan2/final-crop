@@ -19,7 +19,7 @@ export default function Shop() {
       localStorage.removeItem("token");
       router.push("/login");
     }
-  }, []);
+  }, [router]);
 
   const fetchCoins = async () => {
     const res = await fetch(`/api/user/${userId}`);
@@ -28,13 +28,23 @@ export default function Shop() {
   };
 
   const updateCoins = async (amount) => {
+    if (amount < 0 && coins + amount < 0) {
+      alert("You don't have sufficient coins.");
+      return;
+    }
+
     const res = await fetch(`/api/user/${userId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ delta: amount }),
     });
-    const data = await res.json();
-    setCoins(data.coins);
+
+    if (res.ok) {
+      // reload the page after successful update
+      router.reload();
+    } else {
+      alert("Failed to update coins.");
+    }
   };
 
   useEffect(() => {
@@ -42,11 +52,31 @@ export default function Shop() {
   }, [userId]);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h1>Shop Page</h1>
-      {coins !== null ? <p>Your Coins: {coins}</p> : <p>Loading...</p>}
-      <button onClick={() => updateCoins(100)} style={{ marginRight: 10 }}>Add 100 Coins</button>
-      <button onClick={() => updateCoins(-100)}>Remove 100 Coins</button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 font-sans">
+      <h1 className="text-4xl font-bold text-gray-800 mb-6">Shop</h1>
+
+      {coins !== null ? (
+        <p className="text-lg font-medium text-gray-700 mb-4">
+          💰 <span className="font-bold text-indigo-600">{coins}</span> Coins Available
+        </p>
+      ) : (
+        <p className="text-gray-500">Loading...</p>
+      )}
+
+      <div className="flex gap-4">
+        <button
+          onClick={() => updateCoins(100)}
+          className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-xl shadow transition duration-200"
+        >
+          ➕ Add 100 Coins
+        </button>
+        <button
+          onClick={() => updateCoins(-100)}
+          className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl shadow transition duration-200"
+        >
+          ➖ Remove 100 Coins
+        </button>
+      </div>
     </div>
   );
 }

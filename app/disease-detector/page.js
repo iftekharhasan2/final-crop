@@ -1,17 +1,38 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import jwt from "jsonwebtoken";
 
 export default function DiseaseDetector() {
+  const router = useRouter();
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
+
+    try {
+      jwt.decode(token);
+    } catch {
+      localStorage.removeItem("token");
+      router.push("/login");
+    }
+  }, [router]);
+
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
     setResult(null);
     setError("");
+    if (selectedFile) {
+      setPreview(URL.createObjectURL(selectedFile));
+    } else {
+      setPreview(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -51,26 +72,58 @@ export default function DiseaseDetector() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "Arial, sans-serif" }}>
-      <h1>Tomato Disease Detector</h1>
+    <div className="max-w-lg mx-auto mt-12 p-6 bg-white rounded-xl shadow-md font-sans">
+      <h1 className="text-2xl font-bold mb-6 text-center text-green-700">
+        Tomato Disease Detector
+      </h1>
 
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <input type="file" accept="image/*" onChange={handleFileChange} />
-        <br />
-        <button type="submit" style={{ marginTop: "10px", padding: "8px 12px" }}>
+      <form onSubmit={handleSubmit} encType="multipart/form-data" className="flex flex-col items-center space-y-4">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded file:border-0
+            file:text-sm file:font-semibold
+            file:bg-green-100 file:text-green-700
+            hover:file:bg-green-200
+          "
+        />
+
+        {preview && (
+          <img
+            src={preview}
+            alt="Selected"
+            className="w-full max-h-72 object-contain rounded-lg border border-gray-200"
+          />
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition duration-200 disabled:opacity-50"
+        >
           {loading ? "Detecting..." : "Detect Disease"}
         </button>
       </form>
 
-      {error && <p style={{ color: "red", marginTop: 10 }}>Error: {error}</p>}
+      {error && (
+        <p className="mt-4 text-center text-red-600 font-medium">{error}</p>
+      )}
 
       {result && (
-        <div style={{ marginTop: 20 }}>
-          <h2>Prediction Result</h2>
-          <p><strong>Disease:</strong> {result.prediction}</p>
-          <p><strong>Confidence:</strong> {(result.confidence * 100).toFixed(2)}%</p>
-          <h3>Prevention Measures:</h3>
-          <ul>
+        <div className="mt-6 bg-green-50 border border-green-300 rounded-lg p-4">
+          <h2 className="text-xl font-semibold mb-2 text-green-800">Prediction Result</h2>
+          <p>
+            <strong>Disease:</strong> <span className="text-green-900">{result.prediction}</span>
+          </p>
+          <p>
+            <strong>Confidence:</strong>{" "}
+            <span className="text-green-900">{(result.confidence * 100).toFixed(2)}%</span>
+          </p>
+          <h3 className="mt-3 font-semibold text-green-800">Prevention Measures:</h3>
+          <ul className="list-disc list-inside text-green-700">
             {result.prevention_measures.map((measure, idx) => (
               <li key={idx}>{measure}</li>
             ))}

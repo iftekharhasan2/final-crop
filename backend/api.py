@@ -2,17 +2,24 @@ from flask import Flask, request, jsonify
 import pickle
 import pandas as pd
 from flask_cors import CORS
+from pymongo import MongoClient
+import datetime
 
 app = Flask(__name__)
 CORS(app)
 
-# Load model
+# === Load Model ===
 model = pickle.load(open('gb.pkl', 'rb'))
 
-# Your mappings (example shortened)
+# === Connect to MongoDB Atlas ===
+MONGO_URI = "mongodb+srv://ifty:nxzhhhlWutt7PcMh@cluster0.bd9ywas.mongodb.net/mydatabase?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(MONGO_URI)
+db = client["mydatabase"]
+collection = db["prediction_records"]
+
+# === Mappings ===
 zilla_mapping = {'Shariatpur': 0}
 soil_type_mapping = {'Clay': 0, 'Clay Loam': 1, 'Loam': 2, 'Sandy': 3, 'Sandy Loam': 4}
-# ... other mappings here ...
 
 recommendation_mapping = {
     0: 'Cucumber (Fungal disease resistant)',
@@ -23,12 +30,8 @@ recommendation_mapping = {
 }
 
 upazila_mapping = {
-    'Bhedarganj': 0,
-    'Damudya': 1,
-    'Gosairhat': 2,
-    'Naria': 3,
-    'Shariatpur Sadar': 4,
-    'Zajira': 5
+    'Bhedarganj': 0, 'Damudya': 1, 'Gosairhat': 2, 'Naria': 3,
+    'Shariatpur Sadar': 4, 'Zajira': 5
 }
 
 union_parishad_mapping = {
@@ -47,37 +50,18 @@ union_parishad_mapping = {
     'Tarabunia': 50, 'Tulasar': 51, 'Zajira': 52
 }
 
-season_mapping = {
-    'Rabi': 0
-}
+season_mapping = {'Rabi': 0}
+irrigation_mapping = {'Bad': 0, 'Good': 1, 'Medium': 2, 'Very Bad': 3, 'Very Good': 4}
+drainage_mapping = {'Bad': 0, 'Good': 1, 'Low': 2, 'Medium': 3, 'Very Bad': 4, 'Very Good': 5, 'Very Low': 6}
+insect_infestation_mapping = {'High': 0, 'Low': 1, 'Medium': 2, 'Very High': 3, 'Very Low': 4}
+diseases_mapping = {'High': 0, 'Low': 1, 'Medium': 2, 'Very High': 3, 'Very Low': 4}
+last_season_crop_mapping = {'Mustard': 0, 'No_data': 1, 'Rice': 2}
 
-irrigation_mapping = {
-    'Bad': 0, 'Good': 1, 'Medium': 2, 'Very Bad': 3, 'Very Good': 4
-}
-
-drainage_mapping = {
-    'Bad': 0, 'Good': 1, 'Low': 2, 'Medium': 3,
-    'Very Bad': 4, 'Very Good': 5, 'Very Low': 6
-}
-
-insect_infestation_mapping = {
-    'High': 0, 'Low': 1, 'Medium': 2, 'Very High': 3, 'Very Low': 4
-}
-
-diseases_mapping = {
-    'High': 0, 'Low': 1, 'Medium': 2, 'Very High': 3, 'Very Low': 4
-}
-
-last_season_crop_mapping = {
-    'Mustard': 0, 'No_data': 1, 'Rice': 2
-}
-
-
+# === Prediction Endpoint ===
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
-    
-    # Map string inputs to integers
+
     mapped_data = {
         'Zilla': zilla_mapping.get(data.get('Zilla'), -1),
         'Upazila': upazila_mapping.get(data.get('Upazila'), -1),
@@ -89,19 +73,31 @@ def predict():
         'Insect infestation': insect_infestation_mapping.get(data.get('Insect infestation'), -1),
         'Diseases': diseases_mapping.get(data.get('Diseases'), -1),
         'Last Season Crop': last_season_crop_mapping.get(data.get('Last Season Crop'), -1),
-        'Area': int(data.get('Area', 0))  # Area might be numeric input
+        'Area': int(data.get('Area', 0))
     }
 
-    # Check if any mapping failed (-1 means unknown)
     if any(v == -1 for v in mapped_data.values()):
         return jsonify({'error': 'Invalid input category detected'}), 400
-    
+
     df = pd.DataFrame([mapped_data])
     pred_code = model.predict(df)[0]
-    print(pred_code)
     pred_text = recommendation_mapping.get(pred_code, 'Unknown Recommendation')
 
-    return jsonify({'prediction_code': int(pred_code), 'prediction_text': pred_text})
+    # Save record to MongoDB
+    record = {
+        'input': data,
+        'mapped_input': mapped_data,
+        'prediction_code': int(pred_code),
+        'prediction_text': pred_text,
+        'timestamp': datetime.datetime.utcnow()
+    }
+    collection.insert_one(record)
 
+    return jsonify({
+        'prediction_code': int(pred_code),
+        'prediction_text': pred_text
+    })
+
+# === Run Server ===
 if __name__ == '__main__':
     app.run(port=5000)

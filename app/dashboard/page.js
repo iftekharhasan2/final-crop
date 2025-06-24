@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import jwt from "jsonwebtoken";
-import LogoutButton from "../components/LogoutButton";
+
 
 export default function Dashboard() {
   const [userId, setUserId] = useState(null);
@@ -20,7 +20,7 @@ export default function Dashboard() {
       localStorage.removeItem("token");
       router.push("/login");
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!userId) return;
@@ -39,11 +39,22 @@ export default function Dashboard() {
   }, [userId]);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h1>Dashboard</h1>
-      {userId ? <p>Logged in as user ID: {userId}</p> : <p>Loading user...</p>}
-      {coins !== null ? <p>Your Coins: {coins}</p> : <p>Loading coins...</p>}
-      <LogoutButton />
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-200">
+      {/* Pass coins to Navbar */}
+
+      <div className="flex items-center justify-center pt-20 px-4">
+        <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md text-center space-y-6">
+          <h1 className="text-3xl font-bold text-gray-800">Welcome to your Dashboard</h1>
+
+          {userId ? (
+            <p className="text-sm text-gray-500">
+              Logged in as <span className="font-semibold">{userId}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400">Loading user...</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
