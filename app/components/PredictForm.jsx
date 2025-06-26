@@ -37,7 +37,7 @@ export default function PredictForm() {
 
     try {
       // 1. Call Flask backend
-      const res = await fetch("http://localhost:5000/predict", {
+      const res = await fetch("http://localhost:5002/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

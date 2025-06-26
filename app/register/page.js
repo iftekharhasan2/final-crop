@@ -37,7 +37,6 @@ export default function RegisterPage() {
       alert(data.message || data.error);
 
       if (res.ok) {
-        // Optionally clear form
         setForm({
           name: "",
           email: "",
@@ -54,52 +53,70 @@ export default function RegisterPage() {
   }
 
   return (
-    <form onSubmit={handleRegister} style={{ maxWidth: "300px", margin: "100px auto" }}>
-      <h2>Sign Up</h2>
+    <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
+      <form
+        onSubmit={handleRegister}
+        className="w-full max-w-md bg-white shadow-lg rounded-xl p-8 space-y-5 border border-green-200"
+      >
+        <h2 className="text-3xl font-bold text-center text-green-700">Create Account</h2>
 
-      <input
-        type="text"
-        placeholder="Full Name"
-        value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
-        required
-      />
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          required
+          className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-        required
-      />
+        <input
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          required
+          className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
 
-      <input
-        type="tel"
-        placeholder="Phone Number"
-        value={form.number}
-        onChange={(e) => setForm({ ...form, number: e.target.value })}
-        required
-      />
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          value={form.number}
+          onChange={(e) => setForm({ ...form, number: e.target.value })}
+          required
+          className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-        required
-      />
+        <input
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          required
+          className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
 
-      <input
-        type="password"
-        placeholder="Retype Password"
-        value={form.confirmPassword}
-        onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-        required
-      />
+        <input
+          type="password"
+          placeholder="Retype Password"
+          value={form.confirmPassword}
+          onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+          required
+          className="w-full px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Registering..." : "Register"}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full py-2 text-white rounded-md transition duration-200 ${
+            loading
+              ? "bg-green-300 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {loading ? "Registering..." : "Register"}
+        </button>
+      </form>
+    </div>
   );
 }

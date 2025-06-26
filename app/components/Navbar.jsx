@@ -19,6 +19,7 @@ export default function Navbar({ coins, userId }) {
     { name: "Crop Manual", path: "/crop-manual" },
     { name: "Crop Prediction", path: "/crop-prediction" },
     { name: "Disease Detector", path: "/disease-detector" },
+    { name: "Final", path: "/final" },
   ];
 
   // Show authLinks only if logged in, else guestLinks

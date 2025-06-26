@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import jwt from "jsonwebtoken";
 
 
+
 export default function Dashboard() {
   const [userId, setUserId] = useState(null);
   const [coins, setCoins] = useState(null);
   const router = useRouter();
-
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return router.push("/login");
@@ -54,7 +55,9 @@ export default function Dashboard() {
             <p className="text-sm text-gray-400">Loading user...</p>
           )}
         </div>
+       
       </div>
+      
     </div>
   );
 }
