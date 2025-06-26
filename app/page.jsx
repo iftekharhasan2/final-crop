@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-100 to-green-200 text-center px-4">
-      <h1 className="text-4xl font-bold text-green-800 mb-4">Welcome to the Auth App</h1>
+      <h1 className="text-4xl font-bold text-green-800 mb-4">Welcome to the CROP_MANAGEMENT APP</h1>
       <p className="text-lg text-gray-700 mb-6">Start by signing up or logging in</p>
       <div className="space-x-4">
         <Link href="/login">
