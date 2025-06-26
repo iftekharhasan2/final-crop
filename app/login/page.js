@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ emailOrNumber: "", password: "" });
@@ -22,7 +23,6 @@ export default function LoginPage() {
 
     if (data.token) {
       localStorage.setItem("token", data.token);
-
       // Navigate and refresh instantly
       window.location.href = "/dashboard";
     } else {
@@ -74,6 +74,16 @@ export default function LoginPage() {
         >
           Login
         </button>
+
+        {/* Home button below login */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="text-indigo-600 hover:text-indigo-800 font-medium transition"
+          >
+            &larr; Back to Home
+          </Link>
+        </div>
       </form>
     </div>
   );

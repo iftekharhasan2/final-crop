@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -116,6 +117,21 @@ export default function RegisterPage() {
         >
           {loading ? "Registering..." : "Register"}
         </button>
+
+        <div className="mt-4 flex justify-between text-green-700 font-medium">
+          <Link
+            href="/"
+            className="hover:underline transition"
+          >
+            &larr; Home
+          </Link>
+          <Link
+            href="/login"
+            className="hover:underline transition"
+          >
+            Already have an account? Login
+          </Link>
+        </div>
       </form>
     </div>
   );
