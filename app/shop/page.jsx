@@ -99,7 +99,7 @@ export default function Shop() {
             onClick={() => updateCoins(-1000)}
             className="bg-white text-red-600 font-semibold px-6 py-3 rounded-full shadow-md hover:scale-105 hover:bg-red-100 transition-all duration-300"
           >
-            ➖ Remove 1000 Coins
+            ➖ Buy package 1000 Coins
           </button>
         </div>
       </div>
