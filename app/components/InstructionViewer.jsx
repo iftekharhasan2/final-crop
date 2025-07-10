@@ -173,7 +173,7 @@ const InstructionViewer = ({ userId, phase, day }) => {
                       onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3498db")}
                       title="Move this activity to extra work of next day"
                     >
-                      ➡ Extra Work
+                      ➡ Next day Work
                     </button>
                   </div>
                 </li>

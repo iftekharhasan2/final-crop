@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // ✅ Import router
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -8,10 +9,11 @@ export default function RegisterPage() {
     email: "",
     number: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const [loading, setLoading] = useState(false);
+  const router = useRouter(); // ✅ Use Next.js router
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -38,13 +40,8 @@ export default function RegisterPage() {
       alert(data.message || data.error);
 
       if (res.ok) {
-        setForm({
-          name: "",
-          email: "",
-          number: "",
-          password: "",
-          confirmPassword: "",
-        });
+        // ✅ Redirect to login page on successful registration
+        router.push("/login");
       }
     } catch (err) {
       alert("Something went wrong.");
@@ -119,16 +116,10 @@ export default function RegisterPage() {
         </button>
 
         <div className="mt-4 flex justify-between text-green-700 font-medium">
-          <Link
-            href="/"
-            className="hover:underline transition"
-          >
+          <Link href="/" className="hover:underline transition">
             &larr; Home
           </Link>
-          <Link
-            href="/login"
-            className="hover:underline transition"
-          >
+          <Link href="/login" className="hover:underline transition">
             Already have an account? Login
           </Link>
         </div>

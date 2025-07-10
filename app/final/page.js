@@ -21,7 +21,12 @@ const Final = () => {
     }
 
     try {
-      jwt.decode(token); // Optional: const decoded = jwt.decode(token)
+      const decoded = jwt.decode(token);
+      if (decoded?.email) {
+        setUserId(decoded.email);
+      } else {
+        throw new Error("Invalid token");
+      }
     } catch {
       localStorage.removeItem("token");
       router.push("/login");
@@ -48,21 +53,6 @@ const Final = () => {
 
       {!submitted ? (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="mb-6">
-            <label htmlFor="userId" className="block mb-2 font-semibold text-gray-700">
-              Email/User ID:
-            </label>
-            <input
-              id="userId"
-              type="email"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              required
-              placeholder="example@email.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
-            />
-          </div>
-
           <div className="mb-6">
             <label htmlFor="phase" className="block mb-2 font-semibold text-gray-700">
               Phase:
@@ -103,7 +93,7 @@ const Final = () => {
       ) : (
         <>
           <InstructionViewer userId={userId} phase={phase} day={day} />
-          <WeatherDetails /> {/* ✅ User-input based weather */}
+          <WeatherDetails />
           <button
             onClick={handleBack}
             className="mt-8 mx-auto block bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-md transition"
