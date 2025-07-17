@@ -6,14 +6,30 @@ const InstructionViewer = ({ userId, phase, day }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [uploadedImages, setUploadedImages] = useState({}); // base64 images for activities
+  const [uploadedExtraImages, setUploadedExtraImages] = useState({}); // base64 images for extra work
+
+  const [localDoneIndices, setLocalDoneIndices] = useState(new Set()); // done activities locally
+  const [localDoneExtraIndices, setLocalDoneExtraIndices] = useState(new Set()); // done extra work locally
+
   const fetchData = () => {
     setLoading(true);
     setError(null);
+
     axios
-      .post("http://localhost:5000/api/instructions", { user_id: userId, phase, day })
+      .post("http://localhost:5000/api/instructions", {
+        user_id: userId,
+        phase,
+        day,
+      })
       .then((res) => {
         setDayData(res.data);
         setLoading(false);
+        // Reset local done & uploads on new data load
+        setLocalDoneIndices(new Set());
+        setLocalDoneExtraIndices(new Set());
+        setUploadedImages({});
+        setUploadedExtraImages({});
       })
       .catch(() => {
         setError("Failed to fetch instructions");
@@ -23,22 +39,62 @@ const InstructionViewer = ({ userId, phase, day }) => {
 
   useEffect(() => {
     fetchData();
+
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
   }, [userId, phase, day]);
 
-  // Mark an activity done (in activities list)
-  const handleDoneToggle = (index) => {
-    axios
-      .post("http://localhost:5000/api/update_done", {
-        user_id: userId,
-        day: dayData.day,
-        index,
-        done: true,
-      })
-      .then(() => fetchData())
-      .catch(() => alert("Failed to update status"));
+  // Handle image upload for main activities
+  const handleImageUpload = (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Image = reader.result;
+
+      setUploadedImages((prev) => ({
+        ...prev,
+        [index]: base64Image,
+      }));
+
+      // Mark activity done locally
+      setLocalDoneIndices((prev) => new Set(prev).add(index));
+
+      // Also mark extra work done locally for the same index (if any)
+      setLocalDoneExtraIndices((prev) => new Set(prev).add(index));
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Move an activity to extra work of next day
+  // Handle image upload for extra work
+  const handleExtraWorkImageUpload = (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Image = reader.result;
+
+      setUploadedExtraImages((prev) => ({
+        ...prev,
+        [index]: base64Image,
+      }));
+
+      // Mark extra work done locally
+      setLocalDoneExtraIndices((prev) => new Set(prev).add(index));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleMoveToExtra = (index) => {
     axios
       .post("http://localhost:5000/api/move_to_extra_work", {
@@ -46,37 +102,42 @@ const InstructionViewer = ({ userId, phase, day }) => {
         day: dayData.day,
         index,
       })
-      .then(() => fetchData())
+      .then(fetchData)
       .catch(() => alert("Failed to move to extra work"));
-  };
-
-  // Mark an extra work done and remove it
-  const handleCompleteExtra = (index) => {
-    axios
-      .post("http://localhost:5000/api/complete_and_remove_extra", {
-        user_id: userId,
-        day: dayData.day,
-        index,
-      })
-      .then(() => fetchData())
-      .catch(() => alert("Failed to complete extra work"));
   };
 
   if (loading) return <p>Loading instructions...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!dayData) return <p>No data found.</p>;
 
-  const activeActivities = dayData.activities.filter((act) => !act.done);
+  const activities = dayData.activities || [];
+  const extraWork = dayData.extra_work || [];
 
-  const totalActivities = dayData.activities.length;
-  const doneCount = dayData.activities.filter((act) => act.done).length;
-  const progressPercent = totalActivities === 0 ? 0 : (doneCount / totalActivities) * 100;
+  // Combine backend done + local done for activities
+  const combinedDone = activities.map(
+    (act, idx) => act.done || localDoneIndices.has(idx)
+  );
+
+  // Filter active activities (not done)
+  const activeActivities = activities.filter(
+    (act, idx) => !combinedDone[idx]
+  );
+
+  // Filter active extra work (not done locally)
+  const activeExtraWork = extraWork.filter(
+    (_, idx) => !localDoneExtraIndices.has(idx)
+  );
+
+  const totalActivities = activities.length;
+  const doneCount = combinedDone.filter(Boolean).length;
+  const progressPercent =
+    totalActivities === 0 ? 0 : (doneCount / totalActivities) * 100;
 
   return (
     <div
       style={{
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        maxWidth: 700,
+        maxWidth: 1200,
         margin: "auto",
         padding: 20,
         background: "#f9f9f9",
@@ -84,7 +145,9 @@ const InstructionViewer = ({ userId, phase, day }) => {
         boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
       }}
     >
-      <h2 style={{ textAlign: "center", marginBottom: 20, color: "#2c3e50" }}>{dayData.day}</h2>
+      <h2 style={{ textAlign: "center", marginBottom: 20, color: "#2c3e50" }}>
+        {dayData.day}
+      </h2>
 
       {/* Progress Bar */}
       <div
@@ -107,18 +170,29 @@ const InstructionViewer = ({ userId, phase, day }) => {
           }}
         />
       </div>
-      <p style={{ textAlign: "center", marginBottom: 30, fontWeight: "600", color: "#34495e" }}>
+
+      <p
+        style={{
+          textAlign: "center",
+          marginBottom: 30,
+          fontWeight: "600",
+          color: "#34495e",
+        }}
+      >
         Progress: {doneCount} / {totalActivities} activities completed
       </p>
 
+      {/* Today's Activities */}
       <section>
         <h3 style={{ color: "#2980b9", marginBottom: 15 }}>Today's Activities</h3>
         {activeActivities.length === 0 ? (
-          <p style={{ fontStyle: "italic", color: "#7f8c8d" }}>All activities completed!</p>
+          <p style={{ fontStyle: "italic", color: "#7f8c8d" }}>
+            All activities completed!
+          </p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {activeActivities.map((act, idx) => {
-              const realIndex = dayData.activities.findIndex((a) => a === act);
+            {activeActivities.map((act) => {
+              const realIndex = activities.findIndex((a) => a === act);
               return (
                 <li
                   key={realIndex}
@@ -129,8 +203,8 @@ const InstructionViewer = ({ userId, phase, day }) => {
                     borderRadius: 8,
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
+                    flexDirection: "column",
+                    gap: 10,
                   }}
                 >
                   <span>
@@ -138,24 +212,40 @@ const InstructionViewer = ({ userId, phase, day }) => {
                   </span>
 
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <button
-                      onClick={() => handleDoneToggle(realIndex)}
+                    <label
                       style={{
+                        display: "inline-block",
+                        padding: "8px 12px",
                         backgroundColor: "#27ae60",
-                        border: "none",
-                        color: "white",
-                        padding: "8px 14px",
+                        color: "#fff",
                         borderRadius: 6,
                         cursor: "pointer",
                         fontWeight: "600",
-                        transition: "background-color 0.2s",
                       }}
-                      onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#1e8449")}
-                      onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
-                      title="Mark this activity as done"
                     >
-                      ✔ Done
-                    </button>
+                      📷 Upload Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, realIndex)}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+
+                    {/* Show image preview if uploaded */}
+                    {uploadedImages[realIndex] && (
+                      <img
+                        src={uploadedImages[realIndex]}
+                        alt="Uploaded"
+                        style={{
+                          maxWidth: 150,
+                          maxHeight: 100,
+                          marginTop: 8,
+                          borderRadius: 6,
+                          border: "1px solid #ccc",
+                        }}
+                      />
+                    )}
 
                     <button
                       onClick={() => handleMoveToExtra(realIndex)}
@@ -163,15 +253,12 @@ const InstructionViewer = ({ userId, phase, day }) => {
                         backgroundColor: "#3498db",
                         border: "none",
                         color: "white",
-                        padding: "6px 14px",
+                        padding: "8px 14px",
                         borderRadius: 6,
                         cursor: "pointer",
-                        transition: "background-color 0.2s",
                         fontWeight: "600",
+                        marginLeft: "auto",
                       }}
-                      onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#2980b9")}
-                      onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3498db")}
-                      title="Move this activity to extra work of next day"
                     >
                       ➡ Next day Work
                     </button>
@@ -183,49 +270,71 @@ const InstructionViewer = ({ userId, phase, day }) => {
         )}
       </section>
 
+      {/* Extra Work */}
       <section style={{ marginTop: 40 }}>
         <h3 style={{ color: "#2980b9", marginBottom: 15 }}>Extra Work</h3>
-        {dayData.extra_work.length === 0 ? (
+        {activeExtraWork.length === 0 ? (
           <p style={{ fontStyle: "italic", color: "#7f8c8d" }}>No extra work for today.</p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {dayData.extra_work.map((act, idx) => (
-              <li
-                key={idx}
-                style={{
-                  background: "white",
-                  padding: 15,
-                  marginBottom: 12,
-                  borderRadius: 8,
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span>
-                  <strong>{act.period}</strong> ({act.time_range}): {act.description}
-                </span>
-                <button
-                  onClick={() => handleCompleteExtra(idx)}
+            {activeExtraWork.map((act, idx) => {
+              const originalIndex = extraWork.findIndex((a) => a === act);
+              return (
+                <li
+                  key={originalIndex}
                   style={{
-                    backgroundColor: "#27ae60",
-                    border: "none",
-                    color: "white",
-                    padding: "8px 14px",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    transition: "background-color 0.2s",
+                    background: "white",
+                    padding: 15,
+                    marginBottom: 12,
+                    borderRadius: 8,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
                   }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#1e8449")}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#27ae60")}
-                  title="Mark extra work done and remove"
                 >
-                  ✔ Done
-                </button>
-              </li>
-            ))}
+                  <span>
+                    <strong>{act.period}</strong> ({act.time_range}): {act.description}
+                  </span>
+
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <label
+                      style={{
+                        display: "inline-block",
+                        padding: "8px 12px",
+                        backgroundColor: "#27ae60",
+                        color: "#fff",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontWeight: "600",
+                      }}
+                    >
+                      📷 Upload Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleExtraWorkImageUpload(e, originalIndex)}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+
+                    {uploadedExtraImages[originalIndex] && (
+                      <img
+                        src={uploadedExtraImages[originalIndex]}
+                        alt="Uploaded Extra Work"
+                        style={{
+                          maxWidth: 150,
+                          maxHeight: 100,
+                          marginTop: 8,
+                          borderRadius: 6,
+                          border: "1px solid #ccc",
+                        }}
+                      />
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

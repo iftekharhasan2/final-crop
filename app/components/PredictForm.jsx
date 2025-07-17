@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ Import router
 
 export default function PredictForm() {
+  const router = useRouter(); // ✅ Initialize router
+
   const [formData, setFormData] = useState({
     Zilla: "Shariatpur",
     Upazila: "Naria",
@@ -27,6 +30,10 @@ export default function PredictForm() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleRedirectToFinal = () => {
+    router.push("/final");
   };
 
   const handleSubmit = async (e) => {
@@ -55,6 +62,13 @@ export default function PredictForm() {
 
       const data = await res.json();
       setResult(data);
+      setSaved(true);
+
+      // ✅ Delay redirect for 3 seconds
+      setTimeout(() => {
+        handleRedirectToFinal();
+      }, 4000);
+
     } catch (err) {
       setError(err.message);
     }
@@ -117,6 +131,7 @@ export default function PredictForm() {
           <p className="text-green-800 text-lg leading-relaxed">
             <strong>Recommendation:</strong> {result.prediction_text}
           </p>
+          <p className="text-sm text-gray-500 mt-2 italic">Redirecting in 3 seconds...</p>
         </div>
       )}
 

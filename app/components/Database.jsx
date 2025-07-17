@@ -43,7 +43,7 @@ const Database = () => {
   };
 
   const handleRedirectToFinal = () => {
-    router.push("/final");
+    router.push("/crop-prediction");
   };
 
   const filtered = instructions.filter((item) =>
