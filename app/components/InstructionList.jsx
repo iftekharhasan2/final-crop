@@ -7,18 +7,18 @@ const InstructionList = ({ userId }) => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5002/instructions/${userId}`)
+      .get(`https://crop-backend-api-urs6.onrender.com/instructions/${userId}`)
       .then((res) => setInstructions(res.data))
       .catch((err) => console.error("Error fetching instructions:", err));
   }, [userId]);
 
   const handleDone = async (day, index) => {
     try {
-      await axios.patch(`http://localhost:5002/instructions/${userId}/${day}`, {
+      await axios.patch(`https://crop-backend-api-urs6.onrender.com/instructions/${userId}/${day}`, {
         action: "done",
         index,
       });
-      const res = await axios.get(`http://localhost:5002/instructions/${userId}`);
+      const res = await axios.get(`https://crop-backend-api-urs6.onrender.com/instructions/${userId}`);
       setInstructions(res.data);
     } catch (err) {
       console.error("Error marking done:", err);
@@ -27,13 +27,13 @@ const InstructionList = ({ userId }) => {
 
   const handleMoveToNextDay = async (day, index, activity, nextDay) => {
     try {
-      await axios.patch(`http://localhost:5002/instructions/${userId}/${day}`, {
+      await axios.patch(`https://crop-backend-api-urs6.onrender.com/instructions/${userId}/${day}`, {
         action: "move_to_next_day_extra",
         index,
         activity,
         next_day: nextDay,
       });
-      const res = await axios.get(`http://localhost:5002/instructions/${userId}`);
+      const res = await axios.get(`https://crop-backend-api-urs6.onrender.com/instructions/${userId}`);
       setInstructions(res.data);
     } catch (err) {
       console.error("Error moving to next day:", err);
@@ -46,16 +46,16 @@ const InstructionList = ({ userId }) => {
       updated.splice(index, 1);
 
       await axios.patch(
-        `http://localhost:5002/instructions/${userId}/${dayDoc.day}`,
+        `https://crop-backend-api-urs6.onrender.com/instructions/${userId}/${dayDoc.day}`,
         { action: "done", index: -1 }
       );
 
       await axios.put(
-        `http://localhost:5002/instructions/${userId}/${dayDoc.day}/extra`,
+        `https://crop-backend-api-urs6.onrender.com/instructions/${userId}/${dayDoc.day}/extra`,
         { extra_work: updated }
       );
 
-      const res = await axios.get(`http://localhost:5002/instructions/${userId}`);
+      const res = await axios.get(`https://crop-backend-api-urs6.onrender.com/instructions/${userId}`);
       setInstructions(res.data);
     } catch (err) {
       console.error("Error updating extra work:", err);

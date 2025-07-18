@@ -1,6 +1,6 @@
 export async function getWeather({ city }) {
   try {
-    const res = await fetch("http://localhost:5001/weather", {
+    const res = await fetch("https://crop-backend-weather.onrender.com/weather", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

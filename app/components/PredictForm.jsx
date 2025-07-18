@@ -43,7 +43,7 @@ export default function PredictForm() {
     setSaved(false);
 
     try {
-      const res = await fetch("http://localhost:5002/predict", {
+      const res = await fetch("https://crop-backend-api-urs6.onrender.com/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

@@ -40,7 +40,7 @@ const WeatherDetails = () => {
   const fetchWeather = async (cityName) => {
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5001/api/weather", {
+      const res = await axios.post("https://crop-backend-weather.onrender.com/api/weather", {
         city: cityName,
       });
       setWeather(res.data);

@@ -17,7 +17,7 @@ const InstructionViewer = ({ userId, phase, day }) => {
     setError(null);
 
     axios
-      .post("http://localhost:5000/api/instructions", {
+      .post("https://crop-backend-app.onrender.com/api/instructions", {
         user_id: userId,
         phase,
         day,
@@ -97,7 +97,7 @@ const InstructionViewer = ({ userId, phase, day }) => {
 
   const handleMoveToExtra = (index) => {
     axios
-      .post("http://localhost:5000/api/move_to_extra_work", {
+      .post("https://crop-backend-app.onrender.com/api/move_to_extra_work", {
         user_id: userId,
         day: dayData.day,
         index,

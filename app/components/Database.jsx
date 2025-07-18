@@ -14,7 +14,7 @@ const Database = () => {
 
   const fetchInstructions = () => {
     axios
-      .get("http://localhost:5005/api/instructions")
+      .get("https://crop-backend-database.onrender.com/api/instructions")
       .then((res) => setInstructions(res.data))
       .catch((err) => console.error("Error fetching instructions:", err));
   };
@@ -26,7 +26,7 @@ const Database = () => {
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       axios
-        .delete(`http://localhost:5005/api/instructions/${id}`)
+        .delete(`https://crop-backend-database.onrender.com/api/instructions/${id}`)
         .then(() => fetchInstructions())
         .catch((err) => console.error("Error deleting:", err));
     }
@@ -36,7 +36,7 @@ const Database = () => {
     const newEmail = prompt("Enter new userId (email):");
     if (newEmail) {
       axios
-        .put(`http://localhost:5005/api/instructions/${id}`, { userId: newEmail })
+        .put(`https://crop-backend-database.onrender.com/api/instructions/${id}`, { userId: newEmail })
         .then(() => fetchInstructions())
         .catch((err) => console.error("Error editing:", err));
     }
